@@ -32,6 +32,12 @@ Current = {
 	ViewSpace = nil,
 	CursorPos = {1,1},
 	CursorColour = colours.black,
+	CursorBlink = false,
+	Theme = {
+		String = colours.green,
+		Text = colours.black
+	},
+	Input
 }
 
 Events = {
@@ -153,11 +159,69 @@ function LoadCode()
     	sLine = h.readLine()
     end
 	h.close()
+
+	Current.CursorBlink = true
+	Current.ViewSpace.Line = 1
+	UpdateTextInput()
+end
+
+function UpdateTextInput()
+	Current.Input = TextInput:Initialise(Current.ViewSpace.Code[Current.ViewSpace.Line], function(key)
+
+	end, numerical)
+end
+
+local highlightingTerms = {
+	
+}
+
+function ExtractMatch(line, pattern, colour)
+	local match = string.match(line, pattern)
+	return {match, colour}
+end
+
+function Highlight(line)
+	print(line)
+	sleep(1)
+	local highlighted = {}
+	while #line > 0 do
+		local m = ExtractMatch(line, '".*[^\\]"', Current.Theme.String) or
+							  ExtractMatch(line, "'.*[^\\]'", Current.Theme.String) or
+							  ExtractMatch(line, "^[^%w_]", Current.Theme.Text)
+							  print(m)
+							  print(m[1])
+							  sleep(1)
+		if m and m[1] then
+			table.insert(highlighted, m)
+			line = string.sub(line, #m[1] + 1, -1)
+		else
+			line = ''
+		end
+	end
+
+	return highlighted
+	--return {{'print(', colours.black},{"'hello world'", colours.green},{")", colours.black}}
 end
 
 function DrawCode()
+	for i = 1, Drawing.Screen.Height - 3 do
+		local lineNumber = tostring(i)
+		lineNumber = ("   "):sub(#lineNumber) .. lineNumber
+		Drawing.DrawCharacters(1, 3 + i, lineNumber, colours.lightGrey, colours.transparent)
+	end
+
 	for i, line in ipairs(Current.ViewSpace.Code) do
-		Drawing.DrawCharacters(2, 3 + i, line, colours.black, colours.transparent)
+		Drawing.DrawCharacters(5 + x, 3 + i, line, colour.black, colours.transparent)
+--[[
+
+		local highlightedLine = Highlight(line)
+		local x = 1
+		for i2, section in ipairs(highlightedLine) do
+			Drawing.DrawCharacters(5 + x, 3 + i, section[1], section[2], colours.transparent)
+			x = x + #section[1]
+		end
+
+]]--
 	end
 end
 
